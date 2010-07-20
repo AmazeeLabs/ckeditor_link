@@ -59,7 +59,10 @@
             + '<input type="hidden" id="drupal_link-autocomplete" class="autocomplete" value="'
             + CKEDITOR.tools.htmlEncode(Drupal.settings.ckeditor_link.autocomplete_path) + '" /></div></form></div>',
           onLoad: function() {
-            Drupal.behaviors.autocomplete(this.getElement().$);
+            var element = this.getElement();
+            Drupal.behaviors.autocomplete(element.$);
+            var link = element.getFirst().getFirst().getFirst();
+            link.
           }
         });
         content.onChange = CKEDITOR.tools.override(content.onChange, function(original) {
@@ -69,19 +72,43 @@
             var element = dialog.getContentElement('info', 'drupalOptions').getElement().getParent().getParent();
             if (this.getValue() == 'drupal') {
               element.show();
+              if (editor.config.linkShowTargetTab) {
+                dialog.showPage('target');
+              }
+              var uploadTab = dialog.definition.getContents('upload');
+              if (uploadTab && !uploadTab.hidden) {
+                dialog.hidePage('upload');
+              }
             }
             else {
               element.hide();
             }
           };
         });
+        content.setup = function(data) {
+          if (!data.url) {
+            data.type = 'drupal';
+          }
+          if (data.type) {
+            this.setValue(data.type);
+          }
+        }
+        content.validate = function() {
+          var dialog = this.getDialog();
+          if (this.getValue() != 'drupal') {
+            return true;
+          }
+          var func = CKEDITOR.dialog.validate.notEmpty(editor.lang.link.noUrl);
+          alert(func.apply(this.getElement().getDocument().getById('drupal_link')));
+        },
         content.commit = function(data) {
           data.type = this.getValue();
           if (data.type == 'drupal') {
             data.type = 'url';
             var dialog = this.getDialog();
             dialog.getContentElement('info', 'protocol').setValue('');
-            dialog.getContentElement('info', 'url').setValue('internal:node/4');
+            var match = /\((.*?)\)\s*$/i.exec(this.getElement().getDocument().getById('drupal_link').getValue());
+            dialog.getContentElement('info', 'url').setValue(match && match[1]);
           }
         };
       });
