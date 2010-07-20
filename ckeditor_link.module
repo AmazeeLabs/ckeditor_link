@@ -1,0 +1,70 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Written by Henri MEDOT <henri.medot[AT]absyx[DOT]fr>
+ * http://www.absyx.fr
+ */
+
+/**
+ * Implementation of hook_menu().
+ */
+function ckeditor_link_menu() {
+  $items['ckeditor_link/autocomplete'] = array(
+    'page callback' => 'ckeditor_link_autocomplete',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+function ckeditor_link_autocomplete($string = '') {
+  $matches = array();
+
+  if ($string !== '') {
+    $sql = db_rewrite_sql("SELECT n.nid, n.title AS node_title, n.type AS node_type FROM {node} n WHERE n.title LIKE '%%%s%%' ORDER BY n.title, n.type");
+    $result = db_query_range($sql, array($string), 0, 10);
+    while ($node = db_fetch_object($result)) {
+      // Add a class wrapper for a few required CSS overrides.
+      $matches[$node->node_title ." [nid:$node->nid]"] = '<div class="reference-autocomplete">'. check_plain($node->node_title) . '</div>';
+    }
+  }
+
+  drupal_json($matches);
+}
+
+/**
+ * Implementation of hook_form_alter().
+ */
+function ckeditor_link_form_alter(&$form, &$form_state) {
+  $form['#after_build'][] = 'ckeditor_link_process_form';
+}
+
+function ckeditor_link_process_form(&$form, &$form_state) {
+  static $added = FALSE;
+  if (!$added && ($js = drupal_add_js()) && isset($js['setting'])) {
+    $setting = call_user_func_array('array_merge_recursive', $js['setting']);
+    if (isset($setting['ckeditor']) || isset($setting['wysiwyg']['configs']['ckeditor'])) {
+      drupal_add_js(array('ckeditor_link' => array(
+        'module_path' => base_path().drupal_get_path('module', 'ckeditor_link'),
+        'autocomplete_path' => url('ckeditor_link/autocomplete'),
+      )), 'setting');
+      $added = TRUE;
+    }
+  }
+  return $form;
+}
+
+/**
+ * Implementation of hook_wysiwyg_plugin().
+ */
+function ckeditor_link_wysiwyg_plugin($editor, $version) {
+  if ($editor == 'ckeditor') {
+    return array('drupal_link' => array(
+      'path' => drupal_get_path('module', 'ckeditor_link').'/plugins/link/',
+      'load' => TRUE,
+      'extensions' => array('Link' => t('CKEditor Link')),
+    ));
+  }
+}

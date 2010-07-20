@@ -1,0 +1,4 @@
+; $Id$
+name = CKEditor Link
+description = CKEditor Link.
+core = 6.x
