@@ -24,7 +24,10 @@
     return null;
   };
 
-
+  var initAutocomplete = function(input, uri) {
+    input.setAttribute('autocomplete', 'OFF');
+    new Drupal.jsAC(input, new Drupal.ACDB(uri));
+  };
 
   CKEDITOR.plugins.add('drupal_link', {
 
@@ -35,35 +38,41 @@
         // Overrides definition.
         var definition = e.data.definition;
         var infoTab = definition.getContents('info');
-
+/*
         definition.onShow = CKEDITOR.tools.override(definition.onShow, function(original) {
           return function() {
             original.call(this);
           };
         });
-/*
         definition.onOk = function() {
           
         };
 */
         // Overrides linkType definition.
-        var content;
-        content = getById(infoTab.elements, 'linkType');
+        var content = getById(infoTab.elements, 'linkType');
         content.items.unshift(['Drupal', 'drupal']);
         content['default'] = 'drupal';
         infoTab.elements.push({
-          type: 'html',
+          type: 'vbox',
           id: 'drupalOptions',
-          html: '<div>' + CKEDITOR.tools.htmlEncode(editor.lang.link.title)
-            + '<form><div class="cke_dialog_ui_input_text"><input type="text" id="drupal_link" class="cke_dialog_ui_input_text form-autocomplete" />'
-            + '<input type="hidden" id="drupal_link-autocomplete" class="autocomplete" value="'
-            + CKEDITOR.tools.htmlEncode(Drupal.settings.ckeditor_link.autocomplete_path) + '" /></div></form></div>',
-          onLoad: function() {
-            var element = this.getElement();
-            Drupal.behaviors.autocomplete(element.$);
-            var link = element.getFirst().getFirst().getFirst();
-            link.
-          }
+          children: [{
+            type: 'text',
+            id: 'drupal_link',
+            label: editor.lang.link.title,
+            required: true,
+            onLoad: function() {
+              this.getInputElement().addClass('form-autocomplete');
+              initAutocomplete(this.getInputElement().$, Drupal.settings.ckeditor_link.autocomplete_path);
+            },
+            validate: function() {
+              var dialog = this.getDialog();
+              if (dialog.getValueOf('info', 'linkType') != 'drupal') {
+                return true;
+              }
+              var func = CKEDITOR.dialog.validate.notEmpty(editor.lang.link.noUrl);
+              return func.apply(this);
+            }
+          }]
         });
         content.onChange = CKEDITOR.tools.override(content.onChange, function(original) {
           return function() {
@@ -86,28 +95,18 @@
           };
         });
         content.setup = function(data) {
-          if (!data.url) {
+          if (!data.type || (data.type == 'url') && !data.url) {
             data.type = 'drupal';
           }
-          if (data.type) {
-            this.setValue(data.type);
-          }
-        }
-        content.validate = function() {
-          var dialog = this.getDialog();
-          if (this.getValue() != 'drupal') {
-            return true;
-          }
-          var func = CKEDITOR.dialog.validate.notEmpty(editor.lang.link.noUrl);
-          alert(func.apply(this.getElement().getDocument().getById('drupal_link')));
-        },
+          this.setValue(data.type);
+        };
         content.commit = function(data) {
           data.type = this.getValue();
           if (data.type == 'drupal') {
             data.type = 'url';
             var dialog = this.getDialog();
             dialog.getContentElement('info', 'protocol').setValue('');
-            var match = /\((.*?)\)\s*$/i.exec(this.getElement().getDocument().getById('drupal_link').getValue());
+            var match = /\((.*?)\)\s*$/i.exec(dialog.getContentElement('info', 'drupal_link').getValue());
             dialog.getContentElement('info', 'url').setValue(match && match[1]);
           }
         };
