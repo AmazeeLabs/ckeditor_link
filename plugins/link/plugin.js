@@ -29,26 +29,32 @@
     new Drupal.jsAC(input, new Drupal.ACDB(uri));
   };
 
-  CKEDITOR.plugins.add('drupal_link', {
+  var extractPath = function(value) {
+    value = CKEDITOR.tools.trim(value);
+    var match;
+    match = /\((.*?)\)$/i.exec(value);
+    if (match && match[1]) {
+      value = match[1];
+    }
+    var basePath = Drupal.settings.basePath;
+    if (value.indexOf(basePath) == 0) {
+      value = value.substr(basePath.length);
+    }
+    if (/^node\/\d+$/.test(value)) {
+      return value;
+    }
+    return false;
+  };
+
+  CKEDITOR.plugins.add('drupal_path', {
 
     init: function(editor, pluginPath) {
       CKEDITOR.on('dialogDefinition', function(e) {
         if ((e.editor != editor) || (e.data.name != 'link')) return;
 
-        // Overrides definition.
+        // Overrides linkType definition.
         var definition = e.data.definition;
         var infoTab = definition.getContents('info');
-/*
-        definition.onShow = CKEDITOR.tools.override(definition.onShow, function(original) {
-          return function() {
-            original.call(this);
-          };
-        });
-        definition.onOk = function() {
-          
-        };
-*/
-        // Overrides linkType definition.
         var content = getById(infoTab.elements, 'linkType');
         content.items.unshift(['Drupal', 'drupal']);
         content['default'] = 'drupal';
@@ -57,12 +63,15 @@
           id: 'drupalOptions',
           children: [{
             type: 'text',
-            id: 'drupal_link',
+            id: 'drupal_path',
             label: editor.lang.link.title,
             required: true,
             onLoad: function() {
               this.getInputElement().addClass('form-autocomplete');
               initAutocomplete(this.getInputElement().$, Drupal.settings.ckeditor_link.autocomplete_path);
+            },
+            setup: function(data) {
+              this.setValue(data.drupal_path || '');
             },
             validate: function() {
               var dialog = this.getDialog();
@@ -70,8 +79,16 @@
                 return true;
               }
               var func = CKEDITOR.dialog.validate.notEmpty(editor.lang.link.noUrl);
-              return func.apply(this);
-            }
+              if (!func.apply(this)) {
+                return false;
+              }
+              if (!extractPath(this.getValue())) {
+                alert(Drupal.settings.ckeditor_link.msg_invalid_path);
+                this.focus();
+                return false;
+              }
+              return true;
+            },
           }]
         });
         content.onChange = CKEDITOR.tools.override(content.onChange, function(original) {
@@ -98,6 +115,14 @@
           if (!data.type || (data.type == 'url') && !data.url) {
             data.type = 'drupal';
           }
+          else if (data.url && !data.url.protocol && data.url.url) {
+            var path = extractPath(data.url.url);
+            if (path) {
+              data.type = 'drupal';
+              data.drupal_path = path;
+              delete data.url;
+            }
+          }
           this.setValue(data.type);
         };
         content.commit = function(data) {
@@ -105,9 +130,8 @@
           if (data.type == 'drupal') {
             data.type = 'url';
             var dialog = this.getDialog();
-            dialog.getContentElement('info', 'protocol').setValue('');
-            var match = /\((.*?)\)\s*$/i.exec(dialog.getContentElement('info', 'drupal_link').getValue());
-            dialog.getContentElement('info', 'url').setValue(match && match[1]);
+            dialog.setValueOf('info', 'protocol', '');
+            dialog.setValueOf('info', 'url', Drupal.settings.basePath + extractPath(dialog.getValueOf('info', 'drupal_path')));
           }
         };
       });
