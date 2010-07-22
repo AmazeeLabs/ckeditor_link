@@ -52,8 +52,18 @@
       CKEDITOR.on('dialogDefinition', function(e) {
         if ((e.editor != editor) || (e.data.name != 'link')) return;
 
-        // Overrides linkType definition.
+        // Overrides definition.
         var definition = e.data.definition;
+        definition.onFocus = CKEDITOR.tools.override(definition.onFocus, function(original) {
+          return function() {
+            original.call(this);
+            if (this.getValueOf('info', 'linkType') == 'drupal') {
+              this.getContentElement('info', 'drupal_path').select();
+            }
+          };
+        });
+
+        // Overrides linkType definition.
         var infoTab = definition.getContents('info');
         var content = getById(infoTab.elements, 'linkType');
         content.items.unshift(['Drupal', 'drupal']);
