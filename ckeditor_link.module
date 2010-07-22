@@ -64,6 +64,7 @@ function ckeditor_link_process_form(&$form, &$form_state) {
   if (!$added && ($js = drupal_add_js()) && isset($js['setting'])) {
     $setting = call_user_func_array('array_merge_recursive', $js['setting']);
     if (isset($setting['ckeditor']) || isset($setting['wysiwyg']['configs']['ckeditor'])) {
+      drupal_add_css(drupal_get_path('module', 'ckeditor_link').'/ckeditor_link.css');
       drupal_add_js('misc/autocomplete.js');
       drupal_add_js(array('ckeditor_link' => array(
         'module_path' => base_path().drupal_get_path('module', 'ckeditor_link'),
