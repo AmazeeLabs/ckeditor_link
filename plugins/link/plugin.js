@@ -32,7 +32,7 @@
   var extractPath = function(value) {
     value = CKEDITOR.tools.trim(value);
     var match;
-    match = /\((.*?)\)$/i.exec(value);
+    match = /\(([^\(]*?)\)$/i.exec(value);
     if (match && match[1]) {
       value = match[1];
     }

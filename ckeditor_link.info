@@ -1,4 +1,5 @@
 ; $Id$
 name = CKEditor Link
 description = Easily create links to Drupal internal paths through CKEditor.
+package = User interface
 core = 6.x
