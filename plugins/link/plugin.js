@@ -98,7 +98,7 @@
                 return false;
               }
               return true;
-            },
+            }
           }]
         });
         content.onChange = CKEDITOR.tools.override(content.onChange, function(original) {
