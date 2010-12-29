@@ -10,7 +10,7 @@
  * For licensing, see LICENSE.html or http://ckeditor.com/license
  */
 
-(function() {
+(function($) {
 
   // Get a CKEDITOR.dialog.contentDefinition object by its ID.
   var getById = function(array, id, recurse) {
@@ -26,7 +26,7 @@
 
   var initAutocomplete = function(input, uri) {
     input.setAttribute('autocomplete', 'OFF');
-    new Drupal.jsAC(input, new Drupal.ACDB(uri));
+    new Drupal.jsAC($(input), new Drupal.ACDB(uri));
   };
 
   var extractPath = function(value) {
@@ -147,4 +147,4 @@
       });
     }
   });
-})();
+})(jQuery);

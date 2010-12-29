@@ -2,4 +2,6 @@
 name = CKEditor Link
 description = Easily create links to Drupal internal paths through CKEditor.
 package = User interface
-core = 6.x
+core = 7.x
+files[] = ckeditor_link.module
+files[] = ckeditor_link.install

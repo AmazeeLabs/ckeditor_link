@@ -5,5 +5,8 @@
  * Implementation of hook_install().
  */
 function ckeditor_link_install() {
-  db_query("UPDATE {system} SET weight = %d WHERE name = '%s'", 1, 'ckeditor_link');
+  db_update('system')
+    ->fields(array('weight' => 1))
+    ->condition('name', 'ckeditor_link')
+    ->execute();
 }
