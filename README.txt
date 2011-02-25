@@ -1,4 +1,3 @@
-// $Id$
 
 CKEDITOR LINK - A PLUGIN TO EASILY CREATE LINKS TO DRUPAL INTERNAL PATHS
 http://drupal.org/project/ckeditor_link
