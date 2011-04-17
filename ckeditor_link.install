@@ -9,3 +9,10 @@ function ckeditor_link_install() {
     ->condition('name', 'ckeditor_link')
     ->execute();
 }
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function ckeditor_link_uninstall() {
+  db_query("DELETE FROM {variable} WHERE name LIKE 'ckeditor_link_%%'");
+}

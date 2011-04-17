@@ -20,7 +20,10 @@ function ckeditor_link_init() {
  * Implementation of hook_permission().
  */
 function ckeditor_link_permission() {
-  return array('access ckeditor link' => array('title' => t('Access <em>CKEditor Link</em>')));
+  return array(
+    'access ckeditor link' => array('title' => t('Access <em>CKEditor Link</em>')),
+    'administer ckeditor link' => array('title' => t('Administer <em>CKEditor Link</em>')),
+  );
 }
 
 /**
@@ -32,6 +35,14 @@ function ckeditor_link_menu() {
     'access arguments' => array('access ckeditor link'),
     'type' => MENU_CALLBACK,
   );
+  $items['admin/config/content/ckeditor_link'] = array(
+    'title' => 'CKEditor Link',
+    'description' => 'Configure CKEditor Link.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ckeditor_link_settings_form'),
+    'access arguments' => array('administer ckeditor link'),
+    'file' => 'ckeditor_link.admin.inc',
+  );
   return $items;
 }
 
@@ -39,20 +50,73 @@ function ckeditor_link_autocomplete($string = '') {
   $matches = array();
 
   if ($string !== '') {
-    $query = db_select('node', 'n')
-      ->fields('n', array('nid', 'title'))
-      ->condition('n.title', '%'. $string .'%', 'LIKE')
-      ->orderBy('n.title')
-      ->orderBy('n.type')
-      ->range(0, 10)
-      ->addTag('node_access');
-    $result = $query->execute();
-    foreach ($result as $node) {
-      $matches[$node->title .' (node/'. $node->nid. ')'] = '<div class="reference-autocomplete">'. check_plain($node->title) .'</div>';
+    $types = ckeditor_link_get_types();
+    $results = array();
+    foreach ($types as $type) {
+      $func = $type['module'] .'_ckeditor_link_'. $type['type'] .'_autocomplete';
+      if (function_exists($func)) {
+        $results += $func($string);
+        if (count($results) > 10) {
+          break;
+        }
+      }
+    }
+
+    array_splice($results, 10);
+    foreach ($results as $path => $title) {
+      $matches[$title .' ('. $path. ')'] = '<div class="reference-autocomplete">'. check_plain($title) .'</div>';
     }
   }
 
   drupal_json_output($matches);
+}
+
+function ckeditor_link_get_types() {
+  static $types;
+
+  if (!isset($types)) {
+    $types = array();
+
+    $data = array();
+    foreach (module_implements('ckeditor_link_types') as $module) {
+      $func = $module .'_ckeditor_link_types';
+      $data[$module] = $func();
+    }
+
+    foreach ($data as $module => $_types) {
+      foreach ($_types as $type) {
+        if (!is_array($type)) {
+          $type = array('type' => $type);
+        }
+        $type['module'] = $module;
+        $types[$module .'.'. $type['type']] = $type;
+      }
+    }
+
+    drupal_alter('ckeditor_link_types', $types);
+    $types = array_values($types);
+
+    foreach ($types as $type) {
+      if (isset($type['file'])) {
+        require_once(drupal_get_path('module', $type['module']) .'/'. $type['file']);
+      }
+    }
+  }
+
+  return $types;
+}
+
+/**
+ * Implementation of hook_ckeditor_link_types().
+ */
+function ckeditor_link_ckeditor_link_types() {
+  $types[] = array('type' => 'node', 'file' => 'includes/ckeditor_link.node.inc');
+  if (module_exists('taxonomy')) {
+    $types[] = array('type' => 'taxonomy', 'file' => 'includes/ckeditor_link.taxonomy.inc');
+  }
+  $types[] = array('type' => 'menu', 'file' => 'includes/ckeditor_link.menu.inc');
+
+  return $types;
 }
 
 /**
@@ -75,6 +139,8 @@ function ckeditor_link_process_form(&$form, &$form_state) {
         'module_path' => base_path() . drupal_get_path('module', 'ckeditor_link'),
         'autocomplete_path' => url('ckeditor_link/autocomplete'),
         'msg_invalid_path' => t('Link must be a valid Drupal path.'),
+        'type_name' => ckeditor_link_get_link_type_name(),
+        'type_selected' => (bool) variable_get('ckeditor_link_type_selected', 1),
       )), 'setting');
       $added = TRUE;
     }
@@ -108,21 +174,26 @@ function ckeditor_link_filter_info() {
 }
 
 function ckeditor_link_filter_process($text, $filter, $format, $langcode, $cache, $cache_id) {
-  return preg_replace_callback('`\bhref="'. preg_quote(base_path(), '`') .'node/(\d+)(?=[?#"])`', '_ckeditor_link_filter_process', $text);
+  return preg_replace_callback('`\bhref="'. preg_quote(base_path(), '`') .'([^?#"]+)`', '_ckeditor_link_filter_process', $text);
 }
 
 function _ckeditor_link_filter_process($matches) {
-  $nid = $matches[1];
-  $options = array();
+  $path = $matches[1];
 
-  $lang = db_query('SELECT language FROM {node} WHERE nid = :nid', array(':nid' => $nid))->fetchField();
-  if ($lang && ($lang != LANGUAGE_NONE)) {
-    $languages = language_list('enabled');
-    $languages = $languages[1];
-    if (isset($languages[$lang])) {
-      $options['language'] = $languages[$lang];
+  $types = ckeditor_link_get_types();
+  foreach ($types as $type) {
+    $func = $type['module'] .'_ckeditor_link_'. $type['type'] .'_url';
+    if (function_exists($func)) {
+      $url = $func($path);
+      if ($url) {
+        return 'href="'. $url;
+      }
     }
   }
 
-  return 'href="'. url("node/$nid", $options);
+  return 'href="'. base_path() . $path;
+}
+
+function ckeditor_link_get_link_type_name() {
+  return t(variable_get('ckeditor_link_type_name', 'Internal path'), array('!site_name' => variable_get('site_name', 'Drupal')));
 }

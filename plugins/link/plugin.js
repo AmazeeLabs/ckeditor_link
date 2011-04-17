@@ -1,4 +1,3 @@
-
 /**
  * @file
  * Written by Henri MEDOT <henri.medot[AT]absyx[DOT]fr>
@@ -39,7 +38,12 @@
     if (value.indexOf(basePath) == 0) {
       value = value.substr(basePath.length);
     }
-    if (/^node\/\d+$/.test(value)) {
+    var part = value;
+    match = /^([^?#]+)/i.exec(part);
+    if (match && match[1]) {
+      part = match[1];
+    }
+    if (/^[a-z][\w\/-]*$/i.test(part)) {
       return value;
     }
     return false;
@@ -65,8 +69,7 @@
         // Overrides linkType definition.
         var infoTab = definition.getContents('info');
         var content = getById(infoTab.elements, 'linkType');
-        content.items.unshift(['Drupal', 'drupal']);
-        content['default'] = 'drupal';
+        content.items.unshift([Drupal.settings.ckeditor_link.type_name, 'drupal']);
         infoTab.elements.push({
           type: 'vbox',
           id: 'drupalOptions',
@@ -122,7 +125,9 @@
         });
         content.setup = function(data) {
           if (!data.type || (data.type == 'url') && !data.url) {
-            data.type = 'drupal';
+            if (Drupal.settings.ckeditor_link.type_selected) {
+              data.type = 'drupal';
+            }
           }
           else if (data.url && !data.url.protocol && data.url.url) {
             var path = extractPath(data.url.url);
