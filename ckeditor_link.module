@@ -149,6 +149,17 @@ function ckeditor_link_process_form(&$form, &$form_state) {
 }
 
 /**
+ * Implementation of hook_ckeditor_plugin().
+ */
+function ckeditor_link_ckeditor_plugin() {
+  return array('ckeditor_link' => array(
+    'name' => 'drupal_path',
+    'desc' => t('CKEditor Link - A plugin to easily create links to Drupal internal paths'),
+    'path' => drupal_get_path('module', 'ckeditor_link') .'/plugins/link/',
+  ));
+}
+
+/**
  * Implementation of hook_wysiwyg_plugin().
  */
 function ckeditor_link_wysiwyg_plugin($editor, $version) {
