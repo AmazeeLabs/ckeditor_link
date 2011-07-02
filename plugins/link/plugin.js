@@ -22,6 +22,12 @@
     return null;
   };
 
+  var resetInitValues = function(dialog) {
+    dialog.foreach(function(contentObj) {
+      contentObj.setInitValue && contentObj.setInitValue();
+    });
+  };
+
   var initAutocomplete = function(input, uri) {
     input.setAttribute('autocomplete', 'OFF');
     new Drupal.jsAC($(input), new Drupal.ACDB(uri));
@@ -38,15 +44,24 @@
     if (value.indexOf(basePath) == 0) {
       value = value.substr(basePath.length);
     }
-    var part = value;
-    match = /^([^?#]+)/i.exec(part);
-    if (match && match[1]) {
-      part = match[1];
-    }
-    if (/^[a-z][\w\/-]*$/i.test(part)) {
+    if (/^[a-z][\w\/\.-]*$/i.test(value)) {
       return value;
     }
     return false;
+  };
+
+  var cache = {}, revertPath = function(value, callback) {
+    var path = extractPath(value);
+    if (!path) {
+      return false;
+    }
+    if (cache[path] !== undefined) {
+      return cache[path];
+    }
+    $.getJSON(Drupal.settings.ckeditor_link.revert_path + '/' + Drupal.encodePath(path), function(data) {
+      cache[path] = data;
+      callback();
+    });
   };
 
   CKEDITOR.plugins.add('drupal_path', {
@@ -130,7 +145,11 @@
             }
           }
           else if (data.url && !data.url.protocol && data.url.url) {
-            var path = extractPath(data.url.url);
+            var dialog = this.getDialog();
+            var path = revertPath(data.url.url, function() {
+              dialog.setupContent(data);
+              resetInitValues(dialog);
+            });
             if (path) {
               data.type = 'drupal';
               data.drupal_path = path;

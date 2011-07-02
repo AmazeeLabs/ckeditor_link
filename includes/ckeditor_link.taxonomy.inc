@@ -15,7 +15,7 @@ function ckeditor_link_ckeditor_link_taxonomy_autocomplete($string) {
   if (count($vocabularies)) {
     $query = db_select('taxonomy_term_data', 't')
       ->fields('t', array('tid', 'name'))
-      ->condition('t.name', '%'. $string .'%', 'LIKE')
+      ->condition('t.name', '%'. db_like($string) .'%', 'LIKE')
       ->orderBy('t.name')
       ->range(0, 10)
       ->addTag('term_access');
@@ -32,19 +32,43 @@ function ckeditor_link_ckeditor_link_taxonomy_autocomplete($string) {
 }
 
 /**
+ * Implementation of hook_ckeditor_link_TYPE_revert().
+ */
+function ckeditor_link_ckeditor_link_taxonomy_revert($path, &$langcode) {
+  if (function_exists('ckeditor_link_ckeditor_link_i18n_taxonomy_revert')
+   || !preg_match('`^taxonomy/term/(\d+)$`', $path, $matches)) {
+    return;
+  }
+
+  $tid = $matches[1];
+  $name = db_select('taxonomy_term_data', 't')
+    ->fields('t', array('name'))
+    ->condition('t.tid', $tid)
+    ->addTag('term_access')
+    ->execute()
+    ->fetchField();
+  return ($name) ? $name : FALSE;
+}
+
+/**
  * Implementation of hook_ckeditor_link_TYPE_url().
  */
-function ckeditor_link_ckeditor_link_taxonomy_url($path) {
+function ckeditor_link_ckeditor_link_taxonomy_url($path, $langcode) {
   if (!preg_match('`^taxonomy/term/(\d+)$`', $path, $matches)) {
     return;
   }
 
   $tid = $matches[1];
-  $options = array();
 
-  //TODO: Handle i18n.
+  $languages = ckeditor_link_get_languages();
+  if ($languages) {
+    $term = taxonomy_term_load($tid);
+    if ($term && ($language = @$term->language) && ($language != LANGUAGE_NONE) && isset($languages[$language])) {
+      $langcode = $language;
+    }
+  }
 
-  return url("taxonomy/term/$tid", $options);
+  return ckeditor_link_url("taxonomy/term/$tid", $langcode);
 }
 
 /**

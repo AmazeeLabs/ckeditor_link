@@ -61,21 +61,52 @@ function hook_ckeditor_link_TYPE_autocomplete($string) {
 }
 
 /**
+ * Alter autocomplete suggestions.
+ *
+ * @param $results
+ *   The results returned by hook_ckeditor_link_TYPE_autocomplete.
+ * @param $string
+ *   The string to autocomplete.
+ *
+ * @see hook_ckeditor_link_TYPE_autocomplete().
+ */
+function hook_ckeditor_link_autocomplete_alter(&$results, $string) {
+  // Change results.
+}
+
+/**
+ * Revert a path to a user-friendly title.
+ *
+ * @param $path
+ *   The path to revert.
+ * @param $langcode
+ *   The language code of the path if any. The implementing module may fix it
+ *   if necessary, based on the given path.
+ *
+ * @return
+ *   A title, FALSE if not found, or nothing if the implementing module is not
+ *   responsible for the given path.
+ */
+function hook_ckeditor_link_TYPE_revert($path, &$langcode) {
+  //
+}
+
+/**
  * Convert an internal path into an aliased and, if applicable, language
  * prefixed URL.
  *
  * @param $path
- *    The internal path to convert.
+ *   The internal path to convert.
  * @param $langcode
- *    The language prefix of the path if any, the language code of the text to
- *    be filtered otherwise. It should only be used as a fallback when the
- *    content being linked to does not have any intrisic language.
+ *   The language code of the path if any, the language code of the text to be
+ *   filtered otherwise. It should only be used as a fallback when the content
+ *   being linked to does not have any intrisic language.
  *
  * @return
- *    An URL alias, or nothing if the implementing module is not responsible
- *    for the given path.
+ *   An URL alias, or nothing if the implementing module is not responsible for
+ *   the given path.
  */
-function hook_ckeditor_link_TYPE_url($path, $langcode = '') {
+function hook_ckeditor_link_TYPE_url($path, $langcode) {
   //
 }
 

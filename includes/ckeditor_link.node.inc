@@ -15,7 +15,7 @@ function ckeditor_link_ckeditor_link_node_autocomplete($string) {
   if (count($node_types)) {
     $query = db_select('node', 'n')
       ->fields('n', array('nid', 'title'))
-      ->condition('n.title', '%'. $string .'%', 'LIKE')
+      ->condition('n.title', '%'. db_like($string) .'%', 'LIKE')
       ->orderBy('n.title')
       ->orderBy('n.type')
       ->range(0, 10)
@@ -33,26 +33,47 @@ function ckeditor_link_ckeditor_link_node_autocomplete($string) {
 }
 
 /**
- * Implementation of hook_ckeditor_link_TYPE_url().
+ * Implementation of hook_ckeditor_link_TYPE_revert().
  */
-function ckeditor_link_ckeditor_link_node_url($path) {
+function ckeditor_link_ckeditor_link_node_revert($path, &$langcode) {
   if (!preg_match('`^node/(\d+)$`', $path, $matches)) {
     return;
   }
 
   $nid = $matches[1];
-  $options = array();
+  $query = db_select('node', 'n')
+    ->fields('n', array('title', 'language'))
+    ->condition('n.nid', $nid)
+    ->addTag('node_access');
+  if ($node = $query->execute()->fetchObject()) {
+    if ($node->language != LANGUAGE_NONE) {
+      $langcode = LANGUAGE_NONE;
+    }
+    return $node->title;
+  }
 
-  $lang = db_query('SELECT language FROM {node} WHERE nid = :nid', array(':nid' => $nid))->fetchField();
-  if ($lang && ($lang != LANGUAGE_NONE)) {
-    $languages = language_list('enabled');
-    $languages = $languages[1];
-    if (isset($languages[$lang])) {
-      $options['language'] = $languages[$lang];
+  return FALSE;
+}
+
+/**
+ * Implementation of hook_ckeditor_link_TYPE_url().
+ */
+function ckeditor_link_ckeditor_link_node_url($path, $langcode) {
+  if (!preg_match('`^node/(\d+)$`', $path, $matches)) {
+    return;
+  }
+
+  $nid = $matches[1];
+
+  $languages = ckeditor_link_get_languages();
+  if ($languages) {
+    $language = db_query('SELECT language FROM {node} WHERE nid = :nid', array(':nid' => $nid))->fetchField();
+    if ($language && ($language != LANGUAGE_NONE) && isset($languages[$language])) {
+      $langcode = $language;
     }
   }
 
-  return url("node/$nid", $options);
+  return ckeditor_link_url("node/$nid", $langcode);
 }
 
 /**
