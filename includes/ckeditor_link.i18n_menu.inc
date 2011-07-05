@@ -9,6 +9,12 @@
  * Implementation of hook_ckeditor_link_TYPE_autocomplete().
  */
 function ckeditor_link_ckeditor_link_i18n_menu_autocomplete($string) {
+  // Currently, this function only supports MySQL.
+  // TODO: Add support for pgsql.
+  if (!in_array(db_driver(), array('mysql'))) {
+    return array();
+  }
+
   $matches = array();
 
   $menus = array_keys(array_filter(variable_get('ckeditor_link_autocomplete_menus', array())));
@@ -38,4 +44,33 @@ function ckeditor_link_ckeditor_link_i18n_menu_autocomplete($string) {
   }
 
   return $matches;
+}
+
+/**
+ * Implementation of hook_ckeditor_link_TYPE_revert().
+ */
+function ckeditor_link_ckeditor_link_i18n_menu_revert($path, &$langcode) {
+  $router_item = menu_get_item($path);
+  if ($router_item && $router_item['access']) {
+    $result = db_query('SELECT mlid, link_title, language FROM {menu_links} WHERE link_path = :link_path AND hidden = 0 ORDER BY customized DESC', array(':link_path' => $path));
+    $default_langcode = language_default('language');
+    $link_title = NULL;
+    foreach ($result as $item) {
+      if ($item->language == $langcode) {
+        $link_title = $item->link_title;
+        break;
+      }
+      elseif (($item->language == $default_langcode) && ($langcode == LANGUAGE_NONE)) {
+        $langcode = $default_langcode;
+        $link_title = $item->link_title;
+        break;
+      }
+      elseif (!$link_title && ($item->language == LANGUAGE_NONE)) {
+        $link_title = i18n_string_translate(array('menu', 'item', $item->mlid, 'title'), $item->link_title, array('langcode' => $langcode));
+      }
+    }
+    return ($link_title) ? $link_title : NULL;
+  }
+
+  return FALSE;
 }

@@ -9,6 +9,12 @@
  * Implementation of hook_ckeditor_link_TYPE_autocomplete().
  */
 function ckeditor_link_ckeditor_link_i18n_taxonomy_autocomplete($string) {
+  // Currently, this function only supports MySQL.
+  // TODO: Add support for pgsql.
+  if (!in_array(db_driver(), array('mysql'))) {
+    return array();
+  }
+
   $matches = array();
 
   $vocabularies = array_keys(array_filter(variable_get('ckeditor_link_autocomplete_vocabularies', array())));

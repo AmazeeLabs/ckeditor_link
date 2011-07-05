@@ -13,18 +13,18 @@ function ckeditor_link_ckeditor_link_menu_autocomplete($string) {
 
   $menus = array_keys(array_filter(variable_get('ckeditor_link_autocomplete_menus', array())));
   if (count($menus)) {
-    $query = db_select('menu_links', 'ml')
-      ->fields('ml', array('link_path', 'link_title'))
-      ->condition('ml.link_title', '%'. db_like($string) .'%', 'LIKE')
-      ->condition('ml.hidden', 0)
-      ->condition('ml.external', 0)
-      ->orderBy('ml.link_title')
+    $query = db_select('menu_links')
+      ->fields('menu_links', array('link_path', 'link_title'))
+      ->condition('link_title', '%'. db_like($string) .'%', 'LIKE')
+      ->condition('hidden', 0)
+      ->condition('external', 0)
+      ->orderBy('link_title')
       ->range(0, 10);
     if (function_exists('ckeditor_link_ckeditor_link_i18n_menu_autocomplete')) {
-      $query->fields('ml', array('language'));
+      $query->fields('menu_links', array('language'));
     }
     if (!in_array('- any -', $menus)) {
-      $query->condition('ml.menu_name', $menus, 'IN');
+      $query->condition('menu_name', $menus, 'IN');
     }
     $result = $query->execute();
     foreach ($result as $item) {
@@ -38,6 +38,23 @@ function ckeditor_link_ckeditor_link_menu_autocomplete($string) {
   }
 
   return $matches;
+}
+
+/**
+ * Implementation of hook_ckeditor_link_TYPE_revert().
+ */
+function ckeditor_link_ckeditor_link_menu_revert($path, &$langcode) {
+  if (function_exists('ckeditor_link_ckeditor_link_i18n_menu_revert')) {
+    return;
+  }
+
+  $router_item = menu_get_item($path);
+  if ($router_item && $router_item['access']) {
+    $link_title = db_query("SELECT link_title FROM {menu_links} WHERE link_path = :link_path AND hidden = 0 ORDER BY customized DESC", array(':link_path' => $path))->fetchField();
+    return ($link_title) ? $link_title : NULL;
+  }
+
+  return FALSE;
 }
 
 /**

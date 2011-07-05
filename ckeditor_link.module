@@ -147,15 +147,13 @@ function ckeditor_link_ckeditor_link_types() {
 
   if (module_exists('taxonomy')) {
     $types[] = array('type' => 'taxonomy', 'file' => 'includes/ckeditor_link.taxonomy.inc');
-    // TODO: Add support for pgsql.
-    if (in_array(db_driver(), array('mysql')) && module_exists('i18n_taxonomy')) {
+    if (module_exists('i18n_taxonomy')) {
       $types[] = array('type' => 'i18n_taxonomy', 'file' => 'includes/ckeditor_link.i18n_taxonomy.inc');
     }
   }
 
   $types[] = array('type' => 'menu', 'file' => 'includes/ckeditor_link.menu.inc');
-  // TODO: Add support for pgsql.
-  if (in_array(db_driver(), array('mysql')) && module_exists('i18n_menu')) {
+  if (module_exists('i18n_menu')) {
     $types[] = array('type' => 'i18n_menu', 'file' => 'includes/ckeditor_link.i18n_menu.inc');
   }
 
