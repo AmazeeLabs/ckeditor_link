@@ -80,6 +80,28 @@
             }
           };
         });
+        definition.onOk = CKEDITOR.tools.override(definition.onOk, function(original) {
+          return function() {
+            var process = false;
+            if ((this.getValueOf('info', 'linkType') == 'drupal') && !this._.selectedElement) {
+              var ranges = editor.getSelection().getRanges(true);
+              if ((ranges.length == 1) && ranges[0].collapsed) {
+                process = true;
+              }
+            }
+            original.call(this);
+            if (process) {
+              var value = this.getValueOf('info', 'drupal_path');
+              var index = value.lastIndexOf('(');
+              if (index != -1) {
+                var text = CKEDITOR.tools.trim(value.substr(0, index));
+                if (text) {
+                  CKEDITOR.plugins.link.getSelectedLink(editor).setText(text);
+                }
+              }
+            }
+          };
+        });
 
         // Overrides linkType definition.
         var infoTab = definition.getContents('info');

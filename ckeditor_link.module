@@ -93,7 +93,7 @@ function ckeditor_link_revert() {
       if (function_exists($func)) {
         $result = $func($path, $langcode);
         if ($result !== NULL) {
-          $output = ($result !== FALSE) ? check_plain($result) .' ('. ckeditor_link_path_prefix_language($path, $langcode) .')' : FALSE;
+          $output = ($result !== FALSE) ? $result .' ('. ckeditor_link_path_prefix_language($path, $langcode) .')' : FALSE;
           break;
         }
       }
