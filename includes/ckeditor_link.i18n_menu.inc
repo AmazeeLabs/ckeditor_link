@@ -35,10 +35,12 @@ function ckeditor_link_ckeditor_link_i18n_menu_autocomplete($string) {
     }
     $result = $query->execute();
     foreach ($result as $item) {
-      $router_item = menu_get_item($item->link_path);
-      if ($router_item && $router_item['access']) {
-        $path = ckeditor_link_path_prefix_language($item->link_path, $item->language);
-        $matches[$path] = $item->link_title;
+      if (_ckeditor_link_check_path($item->link_path)) {
+        $router_item = menu_get_item($item->link_path);
+        if ($router_item && $router_item['access']) {
+          $path = ckeditor_link_path_prefix_language($item->link_path, $item->language);
+          $matches[$path] = $item->link_title;
+        }
       }
     }
   }

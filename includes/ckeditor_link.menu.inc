@@ -28,11 +28,13 @@ function ckeditor_link_ckeditor_link_menu_autocomplete($string) {
     }
     $result = $query->execute();
     foreach ($result as $item) {
-      $router_item = menu_get_item($item->link_path);
-      if ($router_item && $router_item['access']) {
-        $langcode = (isset($item->language)) ? $item->language : LANGUAGE_NONE;
-        $path = ckeditor_link_path_prefix_language($item->link_path, $langcode);
-        $matches[$path] = $item->link_title;
+      if (_ckeditor_link_check_path($item->link_path)) {
+        $router_item = menu_get_item($item->link_path);
+        if ($router_item && $router_item['access']) {
+          $langcode = (isset($item->language)) ? $item->language : LANGUAGE_NONE;
+          $path = ckeditor_link_path_prefix_language($item->link_path, $langcode);
+          $matches[$path] = $item->link_title;
+        }
       }
     }
   }
