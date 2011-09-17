@@ -10,7 +10,7 @@
  */
 function ckeditor_link_ckeditor_link_file_url($path, $langcode) {
   $file_path = variable_get('file_public_path', conf_path() .'/files');
-  if (substr($path, 0, strlen($file_path)) == $file_path) {
+  if (strpos($path, $file_path .'/') === 0) {
     return file_create_url($path);
   }
 }
