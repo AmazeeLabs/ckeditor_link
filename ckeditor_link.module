@@ -239,7 +239,7 @@ function _ckeditor_link_filter_process($matches, $langcode = NULL) {
     return;
   }
 
-  $path = $matches[1];
+  $path = urldecode($matches[1]);
 
   $langcode = $stored_langcode;
   $path = ckeditor_link_path_strip_language($path, $langcode);
