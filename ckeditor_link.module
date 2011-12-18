@@ -7,17 +7,6 @@
  */
 
 /**
- * Implementation of hook_init().
- */
-function ckeditor_link_init() {
-  if (!variable_get('clean_url', 0)) {
-    module_disable(array('ckeditor_link'));
-    menu_rebuild();
-    drupal_set_message(t('<em>CKEditor Link</em> has been disabled. <a href="!url">Clean URLs</a> need to be enabled for this module to work properly.', array('!url' => url('admin/config/search/clean-urls'))), 'warning');
-  }
-}
-
-/**
  * Implementation of hook_permission().
  */
 function ckeditor_link_permission() {
