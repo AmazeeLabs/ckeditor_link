@@ -155,29 +155,26 @@ function ckeditor_link_ckeditor_link_types() {
  */
 function ckeditor_link_element_info_alter(&$type) {
   if (user_access('access ckeditor link')) {
-    $type['text_format']['#post_render'][] = 'ckeditor_link_text_format_post_render';
+    $type['text_format']['#pre_render'][] = 'ckeditor_link_text_format_pre_render';
   }
 }
 
-function ckeditor_link_text_format_post_render($content, $element) {
-  static $added = FALSE;
-  if (!$added && ($js = drupal_add_js()) && isset($js['settings']['data'])) {
-    $settings = call_user_func_array('array_merge_recursive', $js['settings']['data']);
-    if (isset($settings['ckeditor']) || isset($settings['wysiwyg']['configs']['ckeditor'])) {
-      drupal_add_css(drupal_get_path('module', 'ckeditor_link') .'/ckeditor_link.css');
-      drupal_add_js('misc/autocomplete.js');
-      drupal_add_js(array('ckeditor_link' => array(
-        'module_path' => base_path() . drupal_get_path('module', 'ckeditor_link'),
-        'autocomplete_path' => url('ckeditor_link/autocomplete'),
-        'revert_path' => url('ckeditor_link/revert'),
-        'msg_invalid_path' => t('Link must be a valid internal path.'),
-        'type_name' => ckeditor_link_get_link_type_name(),
-        'type_selected' => (bool) variable_get('ckeditor_link_type_selected', 1),
-      )), 'setting');
-      $added = TRUE;
-    }
+function ckeditor_link_text_format_pre_render($element) {
+  static $added;
+  if (!isset($added)) {
+    $added = TRUE;
+    drupal_add_css(drupal_get_path('module', 'ckeditor_link') .'/ckeditor_link.css');
+    drupal_add_js('misc/autocomplete.js');
+    drupal_add_js(array('ckeditor_link' => array(
+      'module_path' => base_path() . drupal_get_path('module', 'ckeditor_link'),
+      'autocomplete_path' => url('ckeditor_link/autocomplete'),
+      'revert_path' => url('ckeditor_link/revert'),
+      'msg_invalid_path' => t('Link must be a valid internal path.'),
+      'type_name' => ckeditor_link_get_link_type_name(),
+      'type_selected' => (bool) variable_get('ckeditor_link_type_selected', 1),
+    )), 'setting');
   }
-  return $content;
+  return $element;
 }
 
 /**
