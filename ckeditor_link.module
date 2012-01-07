@@ -156,25 +156,42 @@ function ckeditor_link_ckeditor_link_types() {
 function ckeditor_link_element_info_alter(&$type) {
   if (user_access('access ckeditor link')) {
     $type['text_format']['#pre_render'][] = 'ckeditor_link_text_format_pre_render';
+    $type['form']['#post_render'][] = 'ckeditor_link_form_post_render';
   }
 }
 
 function ckeditor_link_text_format_pre_render($element) {
-  static $added;
-  if (!isset($added)) {
-    $added = TRUE;
-    drupal_add_css(drupal_get_path('module', 'ckeditor_link') .'/ckeditor_link.css');
-    drupal_add_js('misc/autocomplete.js');
-    drupal_add_js(array('ckeditor_link' => array(
-      'module_path' => base_path() . drupal_get_path('module', 'ckeditor_link'),
-      'autocomplete_path' => url('ckeditor_link/autocomplete'),
-      'revert_path' => url('ckeditor_link/revert'),
-      'msg_invalid_path' => t('Link must be a valid internal path.'),
-      'type_name' => ckeditor_link_get_link_type_name(),
-      'type_selected' => (bool) variable_get('ckeditor_link_type_selected', 1),
-    )), 'setting');
-  }
+  _ckeditor_link_has_text_format(TRUE);
   return $element;
+}
+
+function _ckeditor_link_has_text_format($set = FALSE) {
+  static $has = FALSE;
+  if (!$set) {
+    return $has;
+  }
+  $has = TRUE;
+}
+
+function ckeditor_link_form_post_render($content, $element) {
+  static $added;
+  if (!isset($added) && _ckeditor_link_has_text_format() && ($js = drupal_add_js()) && isset($js['settings']['data'])) {
+    $settings = call_user_func_array('array_merge_recursive', $js['settings']['data']);
+    if (isset($settings['ckeditor']) || isset($settings['wysiwyg']['configs']['ckeditor'])) {
+      $added = TRUE;
+      drupal_add_css(drupal_get_path('module', 'ckeditor_link') .'/ckeditor_link.css');
+      drupal_add_js('misc/autocomplete.js');
+      drupal_add_js(array('ckeditor_link' => array(
+        'module_path' => base_path() . drupal_get_path('module', 'ckeditor_link'),
+        'autocomplete_path' => url('ckeditor_link/autocomplete'),
+        'revert_path' => url('ckeditor_link/revert'),
+        'msg_invalid_path' => t('Link must be a valid internal path.'),
+        'type_name' => ckeditor_link_get_link_type_name(),
+        'type_selected' => (bool) variable_get('ckeditor_link_type_selected', 1),
+      )), 'setting');
+    }
+  }
+  return $content;
 }
 
 /**
