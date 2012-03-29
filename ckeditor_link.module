@@ -258,7 +258,7 @@ function _ckeditor_link_filter_process($matches, $langcode = NULL) {
     }
   }
 
-  return 'href="'. ckeditor_link_url($path, $langcode);
+  return 'href="'. base_path() . $matches[1];
 }
 
 function ckeditor_link_get_link_type_name() {
