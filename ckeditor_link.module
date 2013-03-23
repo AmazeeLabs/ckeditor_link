@@ -301,7 +301,7 @@ function ckeditor_link_get_languages() {
 
   if (!isset($languages)) {
     $languages = FALSE;
-    if (drupal_multilingual() && language_negotiation_get_any(LOCALE_LANGUAGE_NEGOTIATION_URL)) {
+    if (drupal_multilingual() && module_exists('locale') && language_negotiation_get_any(LOCALE_LANGUAGE_NEGOTIATION_URL)) {
       $languages = language_list('enabled');
       $languages = $languages[1];
     }
