@@ -30,7 +30,25 @@
 
   var initAutocomplete = function(input, uri) {
     input.setAttribute('autocomplete', 'OFF');
-    new Drupal.jsAC($(input), new Drupal.ACDB(uri));
+    var jsAC = new Drupal.jsAC($(input), new Drupal.ACDB(uri));
+
+    // Override Drupal.jsAC.prototype.onkeydown().
+    // @see https://drupal.org/node/1991076
+    if (parseInt(CKEDITOR.version) >= 4) {
+      var _onkeydown = jsAC.onkeydown;
+      jsAC.onkeydown = function(input, e) {
+        if (!e) {
+          e = window.event;
+        }
+        switch (e.keyCode) {
+          case 13: // Enter.
+            this.hidePopup(e.keyCode);
+            return true;
+          default: // All other keys.
+            return _onkeydown.call(this, input, e);
+        }
+      };
+    }
   };
 
   var extractPath = function(value) {
