@@ -310,9 +310,7 @@ function ckeditor_link_get_languages() {
   return $languages;
 }
 
-function ckeditor_link_url($path = NULL, $langcode) {
-  $options = array();
-
+function ckeditor_link_url($path = NULL, $langcode, $options = array()) {
   if ($langcode != LANGUAGE_NONE) {
     $languages = ckeditor_link_get_languages();
     if ($languages && isset($languages[$langcode])) {
