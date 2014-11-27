@@ -41,6 +41,17 @@ function ckeditor_link_menu() {
   return $items;
 }
 
+/**
+ * Implements hook_theme().
+ */
+function ckeditor_link_theme() {
+  return array(
+    'ckeditor_link_autocomplete_title' => array(
+      'variables' => array('title' => NULL),
+    ),
+  );
+}
+
 function ckeditor_link_autocomplete($string = '') {
   $matches = array();
 
@@ -61,11 +72,15 @@ function ckeditor_link_autocomplete($string = '') {
 
     array_splice($results, $limit);
     foreach ($results as $path => $title) {
-      $matches[$title .' ('. $path .')'] = '<div class="reference-autocomplete">'. check_plain($title) .'</div>';
+      $matches[$title . ' (' . $path . ')'] = theme('ckeditor_link_autocomplete_title', array('title' => $title));
     }
   }
 
   drupal_json_output($matches);
+}
+
+function theme_ckeditor_link_autocomplete_title($variables) {
+  return '<div class="reference-autocomplete">' . check_plain($variables['title']) . '</div>';
 }
 
 function ckeditor_link_revert() {
