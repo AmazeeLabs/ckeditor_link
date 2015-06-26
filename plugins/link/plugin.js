@@ -198,15 +198,17 @@
           }
           this.setValue(data.type || 'url');
         };
-        content.commit = function(data) {
-          data.type = this.getValue();
-          if (data.type == 'drupal') {
-            data.type = 'url';
-            var dialog = this.getDialog();
-            dialog.setValueOf('info', 'protocol', '');
-            dialog.setValueOf('info', 'url', Drupal.settings.basePath + extractPath(dialog.getValueOf('info', 'drupal_path')));
-          }
-        };
+        content.commit = CKEDITOR.tools.override(content.commit, function(original) {
+          return function(data) {
+            original.call(this, data);
+            if (data.type == 'drupal') {
+              data.type = 'url';
+              var dialog = this.getDialog();
+              dialog.setValueOf('info', 'protocol', '');
+              dialog.setValueOf('info', 'url', Drupal.settings.basePath + extractPath(dialog.getValueOf('info', 'drupal_path')));
+            }
+          };
+        });
       });
     }
   });
