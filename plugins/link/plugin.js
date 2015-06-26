@@ -196,7 +196,7 @@
               delete data.url;
             }
           }
-          this.setValue(data.type);
+          this.setValue(data.type || 'url');
         };
         content.commit = function(data) {
           data.type = this.getValue();
