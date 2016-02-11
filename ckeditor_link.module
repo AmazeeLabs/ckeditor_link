@@ -226,7 +226,7 @@ function ckeditor_link_ckeditor_plugin() {
 function ckeditor_link_wysiwyg_plugin($editor, $version) {
   if ($editor == 'ckeditor') {
     return array('drupal_path' => array(
-      'path' => drupal_get_path('module', 'ckeditor_link') .'/plugins/link/',
+      'path' => drupal_get_path('module', 'ckeditor_link') . '/plugins/link',
       'load' => TRUE,
       'extensions' => array('Link' => t('CKEditor Link')),
     ));
