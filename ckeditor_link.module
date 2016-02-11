@@ -341,5 +341,5 @@ function ckeditor_link_url($path = NULL, $langcode, $options = array()) {
 }
 
 function _ckeditor_link_check_path($path) {
-  return preg_match('`^[a-z][\w\/\.-]*$`i', $path);
+  return preg_match('`^[a-z][\w\/\. -]*$`i', $path);
 }

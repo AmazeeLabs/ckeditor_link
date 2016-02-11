@@ -60,7 +60,7 @@
     if (value.indexOf(basePath) == 0) {
       value = value.substr(basePath.length);
     }
-    if (/^[a-z][\w\/\.-]*$/i.test(value)) {
+    if (/^[a-z][\w\/\. -]*$/i.test(value)) {
       return value;
     }
     return false;
