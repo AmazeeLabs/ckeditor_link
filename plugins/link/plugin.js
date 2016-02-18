@@ -34,21 +34,19 @@
 
     // Override Drupal.jsAC.prototype.onkeydown().
     // @see https://drupal.org/node/1991076
-    if (parseInt(CKEDITOR.version) >= 4) {
-      var _onkeydown = jsAC.onkeydown;
-      jsAC.onkeydown = function(input, e) {
-        if (!e) {
-          e = window.event;
-        }
-        switch (e.keyCode) {
-          case 13: // Enter.
-            this.hidePopup(e.keyCode);
-            return true;
-          default: // All other keys.
-            return _onkeydown.call(this, input, e);
-        }
-      };
-    }
+    var _onkeydown = jsAC.onkeydown;
+    jsAC.onkeydown = function(input, e) {
+      if (!e) {
+        e = window.event;
+      }
+      switch (e.keyCode) {
+        case 13: // Enter.
+          this.hidePopup(e.keyCode);
+          return true;
+        default: // All other keys.
+          return _onkeydown.call(this, input, e);
+      }
+    };
   };
 
   var extractPath = function(value) {
@@ -196,17 +194,19 @@
               delete data.url;
             }
           }
-          this.setValue(data.type);
+          this.setValue(data.type || 'url');
         };
-        content.commit = function(data) {
-          data.type = this.getValue();
-          if (data.type == 'drupal') {
-            data.type = 'url';
-            var dialog = this.getDialog();
-            dialog.setValueOf('info', 'protocol', '');
-            dialog.setValueOf('info', 'url', Drupal.settings.basePath + extractPath(dialog.getValueOf('info', 'drupal_path')));
-          }
-        };
+        content.commit = CKEDITOR.tools.override(content.commit, function(original) {
+          return function(data) {
+            original.call(this, data);
+            if (data.type == 'drupal') {
+              data.type = 'url';
+              var dialog = this.getDialog();
+              dialog.setValueOf('info', 'protocol', '');
+              dialog.setValueOf('info', 'url', Drupal.settings.basePath + extractPath(dialog.getValueOf('info', 'drupal_path')));
+            }
+          };
+        });
       });
     }
   });
